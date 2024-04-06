@@ -1,0 +1,93 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+
+# Node - for Vite/React project "Fountain"
+node_modules/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python - for "HydroHomie/Dummy"
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PlatformIO - for "HydroHomie" C++ project
+.pio/
+.pioenvs/
+.piolibs/
+.piolibdeps/
+.platformio/
+.vscode/  # if using VSCode with PlatformIO
+*.ini  # Exclude sensitive ini files, except platformio.ini which might be needed
+*.pyc
+__pycache__/
+
+# Exclude all .ini files except platformio.ini which is needed for PIO projects
+*.ini
+!platformio.ini
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Virtual Environments
+.env/
+.venv/
+env/
+venv/
+ENV/
+
+# Spyder Project Settings
+.spyderproject
+.spyproject
+
+# MkDocs Documentation
+/site
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# User-specific files
+*.sw?
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
