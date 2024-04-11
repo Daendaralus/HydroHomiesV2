@@ -38,7 +38,7 @@ const formatTime = (ms) => {
 const HomieDetails = ({ homie }) => {
   const [history, setHistory] = useState([]);
   const [editName, setEditName] = useState(false);
-  const [localName, setLocalName] = useState(homie?.name);
+  const [localName, setLocalName] = useState(homie?.name || homie.ip);
   const [timeUntilNextWatering, setTimeUntilNextWatering] = useState(calculateTimeUntilNextWatering(homie));
   const [remainingWateringDuration, setRemainingWateringDuration] = useState(calculateRemainingWateringDuration(homie));
 
