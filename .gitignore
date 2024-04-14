@@ -92,3 +92,4 @@ ENV/
 ehthumbs.db
 Thumbs.db
 HydroHomiesV2.code-workspace
+HydroHomie/include/secrets.h

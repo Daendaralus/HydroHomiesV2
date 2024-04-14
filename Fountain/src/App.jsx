@@ -57,38 +57,66 @@ function App() {
     }
   };
 
-  // Poll for all homies status
   useEffect(() => {
-    const fetchHomies = async () => { 
-      const homiePromises = homieIps.map(async (ip) => {
+    const fetchStatus = async () => { 
+      const statusPromises = homieIps.map(async (ip) => {
         try {
-          const statusResponse = await fetch(`http://${ip}/status`);
-          const configResponse = await fetch(`http://${ip}/config`);
-
-          const statusData = await statusResponse.json();
-          const configData = await configResponse.json();
-
-          return {...statusData, ...configData, ip}; 
+          const response = await fetch(`http://${ip}/status`);
+          const data = await response.json();
+          return {...data, ip}; 
         } catch (error) {
-          console.error(`Error fetching homie ${ip}:`, error);
-          // Handle errors here (e.g., return a placeholder with error)
-          return { ip, error: 'Error fetching data' };
+          console.error(`Error fetching status for homie ${ip}:`, error);
+          return { ip, error: 'Error fetching status' };
         }
       });
-
-      const homies = await Promise.all(homiePromises);
-      setHomies(homies);
+  
+      const homiesStatus = await Promise.all(statusPromises);
+      setHomies(homies => {
+        const updatedHomies = homieIps.map(ip => {
+          const status = homiesStatus.find(status => status.ip === ip);
+          const existing = homies.find(homie => homie.ip === ip);
+          return {...(existing || {}), ...status};
+        });
+        return updatedHomies;
+      });
     };
-
-    fetchHomies();
-    const intervalId = setInterval(fetchHomies, 5000);
-
+  
+    fetchStatus();
+    const intervalId = setInterval(fetchStatus, 5000);
+  
     return () => clearInterval(intervalId);
-  }, [homieIps]);
+  }, [homieIps]); // Empty dependency array ensures this runs only once
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const configPromises = homieIps.map(async (ip) => {
+        try {
+          const response = await fetch(`http://${ip}/config`);
+          const configData = await response.json();
+          return {ip, ...configData};
+        } catch (error) {
+          console.error(`Error fetching config for homie ${ip}:`, error);
+          return { ip, error: 'Error fetching config' };
+        }
+      });
+  
+      const homiesConfig = await Promise.all(configPromises);
+      setHomies(homies => {
+        const updatedHomies = homieIps.map(ip => {
+          const config = homiesConfig.find(conf => conf.ip === ip);
+          const existing = homies.find(homie => homie.ip === ip);
+          return {...(existing || {}), ...config};
+        });
+        return updatedHomies;
+      });
+    };
+  
+    fetchConfig();
+  }, [homieIps]); // Dependency on homieIps ensures this runs when IPs change
 
   useEffect(() => {
     if (selectedHomie) {
-      setHomieDetail(<HomieDetails homie={selectedHomie} />);
+      setHomieDetail(<HomieDetails homie={selectedHomie} homieUpdateCallback={homieUpdateConfig} />);
     }
   }, [selectedHomie]);
 
@@ -109,6 +137,18 @@ function App() {
 
   const saveHomiesToLocalStorage = () => {
     localStorage.setItem('homies', JSON.stringify(homieIps));
+  }
+
+  const homieUpdateConfig = (ip, config) => {
+    setHomies(homies => {
+      const updatedHomies = homies.map(homie => {
+        if (homie.ip === ip) {
+          return {...homie, ...config};
+        }
+        return homie;
+      });
+      return updatedHomies;
+    });
   }
 
   const handleAddHomie = (newHomieIp) => {

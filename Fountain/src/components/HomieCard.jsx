@@ -47,7 +47,7 @@ const getWaterLevelColor = (waterLevel) => {
   // Assuming waterLevel is between 0 and 100
   const green = [0, 255, 0]; // RGB for green
   const red = [255, 0, 0]; // RGB for red
-
+  waterLevel = waterLevel/10.0;
   let mix;
   if (waterLevel > 25) {
     // If above 25%, calculate mix on a scale from 0.5 to 1 (where 1 is fully green)
@@ -99,7 +99,8 @@ const HomieCard = ({ homie: homie, isSelected }) => {
                 bgcolor: isSelected ? 'primary.darker' : 'background.paper', // Highlight background if selected
                 borderColor: isSelected ? 'primary.main' : 'divider', // Different border color for selected card
             }}
-            elevation={isSelected ? 8 : 3}>
+            // elevation={isSelected ? 8 : 3}
+            >
         <CardContent>
             <Typography variant="h5" component="div" textAlign="center">
             {homie.name || homie.ip}
@@ -118,7 +119,7 @@ const HomieCard = ({ homie: homie, isSelected }) => {
                       <ListItemIcon>
                         <OpacityIcon sx={{ color: getWaterLevelColor(homie.current_water_level) }} />
                       </ListItemIcon>
-                      Water Level: {homie.current_water_level.toFixed(2)}%</ListItem>
+                      Water Level: {(homie.current_water_level/10.0).toFixed(2)}%</ListItem>
                     <ListItem>
                       <ListItemIcon>
                         <ThermostatIcon sx={{ color: getTemperatureColor(homie.current_temp) }} />
