@@ -13,7 +13,7 @@ private:
     unsigned long lastPollTime = 0;
     unsigned long lastHistoryUpdateTime = 0;
     unsigned long lastWateringStartTime = 0;
-    time_t lastWateringStartTimestamp;
+    time_t lastWateringStartTimestamp = 0;
     bool isWatering = false;
     const unsigned int pumpPin;
     const unsigned long historyUpdateInterval = 60000; // 1 minute in milliseconds

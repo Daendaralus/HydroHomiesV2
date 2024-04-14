@@ -55,6 +55,7 @@ void setup() {
   String apName = config.getName() !="" ? config.getName() : "HydroHomie-" + apSuffix;
   WiFiManager wifiManager;
   wifiManager.autoConnect(apName.c_str());
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
   Serial.println("connected...let's hydrate!");
   initializeTime();
   server.listen(80); // Start the HTTP server on port 80
