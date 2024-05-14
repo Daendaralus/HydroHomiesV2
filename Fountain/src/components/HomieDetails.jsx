@@ -44,6 +44,7 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
   const [remainingWateringDuration, setRemainingWateringDuration] = useState(calculateRemainingWateringDuration(homie));
   const [shouldSubmit, setShouldSubmit] = useState(false);
   const chartRef = useRef(null);  // Ref to hold the chart instance
+  const chartRef2 = useRef(null);  // Ref to hold the chart instance
 
   const [config, setConfig] = useState({
     name: localName,
@@ -59,9 +60,14 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
         const waterdata = data.map((entry, index) => ({
           time: new Date(new Date().getTime() - ((data.length - index) * 60 * 1000)),  // Subtract minutes
           value: entry[1] / 10.0
-        }));    
+        }));
+        const plantdata = data.map((entry, index) => ({
+          time: new Date(new Date().getTime() - ((data.length - index) * 60 * 1000)),  // Subtract minutes
+          value: entry[0] / 10.0
+        }));  
         // if (chartRef.current === null) {
-          initializeChart(waterdata);
+          initializeChart(waterdata, 'waterChart', chartRef);
+          initializeChart(plantdata, 'plantChart', chartRef2);
         // }
     };
 
@@ -90,9 +96,19 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
         x: new Date(),  // Use current date for the new data point
         y: homie.current_water_level / 10.0
       };
-      addDataToChart(newLevel);
+      addDataToChart(newLevel, chartRef);
     }
   }, [homie.current_water_level]);
+  
+  useEffect(() => {
+    if (chartRef2.current && homie.current_plant_level !== undefined) {
+      const newLevel = {
+        x: new Date(),  // Use current date for the new data point
+        y: homie.current_plant_level / 10.0
+      };
+      addDataToChart(newLevel, chartRef2);
+    }
+  }, [homie.current_plant_level]);
   
   // UseEffect to handle the form submission
   useEffect(() => {
@@ -102,7 +118,7 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
     }
   }, [config]);  // Now this only runs when config changes and submission is required
 
-  const addDataToChart = (newData) => {
+  const addDataToChart = (newData, chartref) => {
     const chart = chartRef.current;
     chart.data.datasets[0].data.push(newData);
     chart.update();
@@ -123,14 +139,14 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
 
 
   // Initialize chart with historical data
-  const initializeChart = (historicalData) => {
-    const ctx = document.getElementById('waterChart').getContext('2d');    
+  const initializeChart = (historicalData, chartname, chartref) => {
+    const ctx = document.getElementById(chartname).getContext('2d');    
     // Check if chart instance already exists
-    if (chartRef.current !== null) {
-        chartRef.current.destroy(); // Destroy the existing chart instance
+    if (chartref.current !== null) {
+      chartref.current.destroy(); // Destroy the existing chart instance
     }
 
-    chartRef.current = new Chart(ctx, {
+    chartref.current = new Chart(ctx, {
       type: 'line',
       data: {
         // labels: historicalData.map((_, index) => `${index + 1} min ago`).reverse(),
@@ -283,6 +299,25 @@ const HomieDetails = ({ homie, homieUpdateCallback }) => {
       <Grid item xs={12}>
       <Box sx={{ height: '300px', width: '100%', mb: 4, pr:2 }}>
       <canvas id="waterChart"></canvas>
+        {/* <Line data={chartDataWater} options={{ 
+          responsive: true,
+          maintainAspectRatio: false,
+            scales: {
+                x: {
+                    reverse: false, // Ensures the chart displays oldest to newest from left to right
+                },
+                y: {
+                    min: 0,
+                    max: 100,
+                }
+            }
+        }} /> */}
+
+        </Box>
+      </Grid>
+      <Grid item xs={12}>
+      <Box sx={{ height: '300px', width: '100%', mb: 4, pr:2 }}>
+      <canvas id="plantChart"></canvas>
         {/* <Line data={chartDataWater} options={{ 
           responsive: true,
           maintainAspectRatio: false,

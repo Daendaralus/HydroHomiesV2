@@ -15,7 +15,7 @@ private:
         int watering_interval = 60*60;
         int watering_duration = 10*60;
         String name = "";
-        int water_tank_threshold = 100;
+        int water_tank_threshold = 250;
         int plant_flood_buffer = 0;
     } cache;
 
@@ -26,11 +26,11 @@ public:
         preferences.begin(namespaceName.c_str(), false); // Initialize Preferences with namespace. RW-mode (false).
         active = true;
         // Load initial values into cache
-        cache.watering_interval = preferences.getInt("watering_int", 0);
-        cache.watering_duration = preferences.getInt("watering_dur", 0);
+        cache.watering_interval = preferences.getInt("watering_int", cache.watering_interval);
+        cache.watering_duration = preferences.getInt("watering_dur", cache.watering_duration);
         cache.name = preferences.getString("name", "");
-        cache.water_tank_threshold = preferences.getInt("w_tank_thr", 0);
-        cache.plant_flood_buffer = preferences.getInt("plnt_fld_buff", 0);
+        cache.water_tank_threshold = preferences.getInt("w_tank_thr", cache.water_tank_threshold);
+        cache.plant_flood_buffer = preferences.getInt("plnt_fld_buff", cache.plant_flood_buffer);
     }
 
     void end() {

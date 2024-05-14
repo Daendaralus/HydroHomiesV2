@@ -89,7 +89,7 @@ const HomieCard = ({ homie: homie, isSelected }) => {
     //                      ? ': Watering' 
     //                      : ' in: ' + timeRemaining;
 
-    return (
+    return homie.error? null : (
         <Box sx={{ minWidth: 100, width: '100%', maxWidth: '100%',
         '&:hover': {
           transform: 'scale(1.03)',
@@ -119,12 +119,20 @@ const HomieCard = ({ homie: homie, isSelected }) => {
                       <ListItemIcon>
                         <OpacityIcon sx={{ color: getWaterLevelColor(homie.current_water_level) }} />
                       </ListItemIcon>
-                      Water Level: {(homie.current_water_level/10.0).toFixed(2)}%</ListItem>
+                      Water Level: {(homie.current_water_level/10.0).toFixed(2)}%
+                    </ListItem>
                     <ListItem>
+                      <ListItemIcon>
+                        <OpacityIcon sx={{ color: getWaterLevelColor(homie.current_plant_level) }} />
+                      </ListItemIcon>
+                      Plant Level: {(homie.current_plant_level/10.0).toFixed(2)}%
+                    </ListItem>
+                    {/* <ListItem>
                       <ListItemIcon>
                         <ThermostatIcon sx={{ color: getTemperatureColor(homie.current_temp) }} />
                       </ListItemIcon>
-                      Temperature: {homie.current_temp.toFixed(2)}°C</ListItem>
+                      Temperature: {homie.current_temp.toFixed(2)}°C
+                      </ListItem> */}
                 </List>
             </Typography>
         </CardContent>

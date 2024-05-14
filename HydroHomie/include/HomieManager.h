@@ -18,12 +18,12 @@ private:
     const unsigned int pumpPin;
     const unsigned long historyUpdateInterval = 60000; // 1 minute in milliseconds
     const unsigned long pollInterval = 10000; // Regular polling interval in milliseconds
-
+    bool useDigitalSensor = false;
     unsigned int readCount = 0;
 
 public:
-    HomieManager(SensorManager& sensorMgr, HomieConfig& cfg, unsigned int pumpPin)
-    : sensorManager(sensorMgr), config(cfg), pumpPin(pumpPin) {
+    HomieManager(SensorManager& sensorMgr, HomieConfig& cfg, unsigned int pumpPin, bool useDigitalSensor = false)
+    : sensorManager(sensorMgr), config(cfg), pumpPin(pumpPin), useDigitalSensor(useDigitalSensor) {
         pinMode(pumpPin, OUTPUT);
         digitalWrite(pumpPin, LOW); // Ensure pump is off initially
     }
@@ -65,11 +65,11 @@ public:
 
             // Activate sensors, read multiple times, then deactivate
             sensorManager.activate();
-            delay(50);
+            // delay(25);
             for (readCount = 0; readCount < 5; readCount++) {
                 sensorManager.readSensors(readCount == 4 && updateHistory, readCount == 4); // Average out on the final read
                 if(readCount < 4){
-                    delay(10); // Wait 10ms between reads
+                    delay(5); // Wait 10ms between reads
                 }
             }
             sensorManager.deactivate();
@@ -79,6 +79,7 @@ public:
             if (updateHistory) {
                 lastHistoryUpdateTime = currentTime;
             }
+
         }
         // Manage watering based on interval and duration
         if(lastWateringStartTime == 0 && lastWateringStartTimestamp == 0){
@@ -103,19 +104,32 @@ public:
 private:
     void manageWatering() {
         // Retrieve sensor thresholds and current water level
-        int waterLevelThreshold = config.getWaterTankThreshold(); // For the water tank
+        int waterTankThreshold = config.getWaterTankThreshold(); // For the water tank
         auto currentValues = sensorManager.getLastValue(); // Get the last sensor values
-        int currentWaterLevel = currentValues.first; // Analog sensor value (0-1000)
-        int digitalSensorStatus = currentValues.second; // Digital sensor status (0 or 1)
-        bool shouldPump = currentWaterLevel > waterLevelThreshold && digitalSensorStatus == 0;
+        const auto [currentTankLevel, currentPlantLevel, digitalSensorStatus] = currentValues;
+        // Serial.print("currentTankLevel: ");
+        // Serial.println(currentTankLevel);
+        // Serial.print("currentPlantLevel: ");
+        // Serial.println(currentPlantLevel);
+        // Serial.print("digitalSensorStatus: ");
+        // Serial.println(digitalSensorStatus);
+        // Serial.println(isWatering);
+        // int currentWaterLevel = currentValues.first; // Analog sensor value (0-1000)
+        // int digitalSensorStatus = currentValues.second; // Digital sensor status (0 or 1)
+        bool digitalSensorBool = useDigitalSensor ? digitalSensorStatus == 0 : true;
+        bool shouldPump = currentTankLevel > waterTankThreshold && digitalSensorBool && currentPlantLevel <= 400;
         // Logic to control watering based on water level and digital sensor status
+        // Serial.print("shouldPump: ");
+        // Serial.println(shouldPump);
         if (isWatering && shouldPump) {
             // Start watering if below threshold and not already watering
             digitalWrite(pumpPin, HIGH);
+            delay(50); // Wait for pump to ramp up
         } 
-        if ((currentWaterLevel <= waterLevelThreshold || digitalSensorStatus == 1) || !isWatering) {
+        if (!isWatering || !shouldPump ){//(currentTankLevel <= waterTankThreshold || (useDigitalSensor ? digitalSensorStatus == 1 : false)|| currentPlantLevel > 800)) {
             // Stop watering if water level is sufficient or if digital sensor in the pot is triggered
             digitalWrite(pumpPin, LOW);
+            // Serial.println("killing pump");
         }
     }
 };

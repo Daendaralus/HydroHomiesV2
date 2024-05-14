@@ -153,10 +153,12 @@ private:
 
 
     esp_err_t handleGetStatus(PsychicRequest *request) {
-        auto status = _homieManager->getSensorManager()->getLastValue();
+        auto currentValues = _homieManager->getSensorManager()->getLastValue(); // Get the last sensor values
+        const auto [tank, plant, dig]  = currentValues;
+
         DynamicJsonDocument doc(1024);
-        doc["current_temp"] = status.second;
-        doc["current_water_level"] = status.first;
+        doc["current_plant_level"] = plant;
+        doc["current_water_level"] = tank;
         doc["is_watering"] = _homieManager->isWateringActive();
         doc["last_watering_time"] = _homieManager->getLastWateringStartTime();
         String output;
@@ -170,8 +172,9 @@ private:
         JsonArray array = doc.to<JsonArray>();
         for (const auto& entry : history) {
             JsonArray nestedArray = array.createNestedArray();
-            nestedArray.add(entry.second);
-            nestedArray.add(entry.first);
+            const auto [tank, plant, dig] = entry;
+            nestedArray.add(plant);
+            nestedArray.add(tank);
         }
         String output;
         serializeJson(doc, output);

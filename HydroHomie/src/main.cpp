@@ -12,16 +12,20 @@
 #include "HomieManager.h"
 #include "secrets.h"
 
-#define RESISTIVE_SENSOR_PIN IO17  // GPIO pin connected to the resistive water sensor
-#define CAPACITIVE_SENSOR_PIN IO35 // GPIO pin connected to the capacitive water sensor
-#define CAPACITIVE_OUTPUT_PIN IO26 // GPIO pin connected to the capacitive water sensor output
-#define RESISTIVE_OUTPUT_PIN IO25  // GPIO pin connected to the resistive water sensor output
+#define RESISTIVE_SENSOR_PIN 21  // GPIO pin connected to the resistive water sensor
+#define CAPACITIVE_SENSOR_PIN 35 // GPIO pin connected to the capacitive water sensor
+#define CAPACITIVE_SENSOR1_PIN 34 // GPIO pin connected to the capacitive water sensor
+#define CAPACITIVE_OUTPUT_PIN 19 // GPIO pin connected to the capacitive water sensor output
+#define RESISTIVE_OUTPUT_PIN 22  // GPIO pin connected to the resistive water sensor output
 
-#define PUMP_RELAY_PIN IO14        // GPIO pin connected to the relay controlling the pump
+#define PUMP_RELAY_PIN 23        // GPIO pin connected to the relay controlling the pump
 
 PsychicHttpServer server; // HTTP server on port 80
 HomieConfig config;
-SensorManager sensorManager(RESISTIVE_SENSOR_PIN, RESISTIVE_OUTPUT_PIN, CAPACITIVE_SENSOR_PIN, CAPACITIVE_OUTPUT_PIN);
+WiFiManager wifiManager;
+SensorManager sensorManager(RESISTIVE_SENSOR_PIN, RESISTIVE_OUTPUT_PIN, 
+CAPACITIVE_SENSOR_PIN, CAPACITIVE_OUTPUT_PIN,
+CAPACITIVE_SENSOR1_PIN, CAPACITIVE_OUTPUT_PIN, true);
 HomieManager homieManager(sensorManager, config, PUMP_RELAY_PIN);
 HomieServer homieServer(&server, &config, &homieManager);
 
@@ -37,25 +41,27 @@ void initializeTime() {
     Serial.println("Time synchronized");
 }
 
-
-void setup() {
-  Serial.begin(115200); // Start serial communication at 115200 baud
-  // pinMode(PUMP_RELAY_PIN, OUTPUT); // Set the pump relay pin as an output
-  // digitalWrite(PUMP_RELAY_PIN, LOW); // Ensure the pump is off initially
-  // pinMode(CAPACITIVE_OUTPUT_PIN, OUTPUT); // Set the capacitive sensor output pin as an output
-  // pinMode(RESISTIVE_OUTPUT_PIN, OUTPUT); // Set the resistive sensor output pin as an output
-  // digitalWrite(CAPACITIVE_OUTPUT_PIN, LOW); // Set the capacitive sensor output pin to HIGH
-  // digitalWrite(RESISTIVE_OUTPUT_PIN, LOW); // Set the resistive sensor output pin to HIGH
-  // pinMode(RESISTIVE_SENSOR_PIN, INPUT);
-  config.begin();
-  config.end();
+String getAPName(){
   String mac = WiFi.macAddress();
   String apSuffix = mac.substring(mac.length() - 5, mac.length()); // Last 5 characters include 4 hex digits and a colon
   apSuffix.replace(":", ""); // Remove the colon, leaving just the last 4 hex digits
   String apName = config.getName() !="" ? config.getName() : "HydroHomie-" + apSuffix;
-  WiFiManager wifiManager;
-  wifiManager.autoConnect(apName.c_str());
+  return apName;
+}
+
+
+void setup() {
   WiFi.setTxPower(WIFI_POWER_19_5dBm);
+  Serial.begin(115200); // Start serial communication at 115200 baud
+  config.begin();
+  config.end();
+
+
+  wifiManager.setWiFiAutoReconnect(true);
+  wifiManager.setConnectTimeout(60);
+  wifiManager.setConnectRetries(5);
+  wifiManager.setConfigPortalTimeout(180);
+  wifiManager.autoConnect(getAPName().c_str());
   Serial.println("connected...let's hydrate!");
   initializeTime();
   server.listen(80); // Start the HTTP server on port 80
@@ -78,10 +84,21 @@ void setup() {
   // Initialize OTA
   ArduinoOTA.setPassword(otapwd);
   ArduinoOTA.begin();
+
+  
 }
 
 void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+     if (wifiManager.getWiFiIsSaved()) 
+      wifiManager.setEnableConfigPortal(false);
+    wifiManager.setConnectTimeout(10);
+    wifiManager.setConnectRetries(1);
+    wifiManager.autoConnect(getAPName().c_str());
+    if (WiFi.status() == WL_CONNECTED){
+      initializeTime();
+    }
+  }
   ArduinoOTA.handle();  // Listen for OTA events
-  // ElegantOTA.loop();
   homieManager.handle();
 }
